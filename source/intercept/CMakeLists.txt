@@ -30,6 +30,8 @@ endif()
 
 target_include_directories(intercept_a PUBLIC include/)
 target_include_directories(intercept_a PUBLIC source/)
+target_compile_definitions(intercept_a PRIVATE SQLITE_THREADSAFE=0)
+target_compile_definitions(intercept_a PRIVATE SQLITE_OMIT_SHARED_CACHE)
 target_link_libraries(intercept_a PUBLIC domain_a)
 target_link_libraries(intercept_a PUBLIC main_a)
 target_link_libraries(intercept_a PUBLIC exec_a)

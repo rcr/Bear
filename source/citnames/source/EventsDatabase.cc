@@ -44,14 +44,15 @@ namespace {
 
     rust::Result<sqlite3 *> open_sqlite(const fs::path &file) {
         sqlite3 *handle;
-        if (auto rc = sqlite3_open(file.c_str(), &handle); rc == SQLITE_OK) {
-            return rust::Ok(handle);
+        int flags = SQLITE_OPEN_READONLY;
+        if (auto rc = sqlite3_open_v2(file.c_str(), &handle, flags, nullptr); rc != SQLITE_OK) {
+            return rust::Err(
+                    std::runtime_error(
+                            fmt::format("Opening database {}, failed: {}",
+                                        file.string(),
+                                        sqlite3_errmsg(handle))));
         }
-        return rust::Err(
-                std::runtime_error(
-                        fmt::format("Opening database {}, failed: {}",
-                                    file.string(),
-                                    sqlite3_errmsg(handle))));
+        return rust::Ok(handle);
     }
 
     rust::Result<sqlite3_stmt *> create_prepared_statement(sqlite3 *handle, const char *sql) {

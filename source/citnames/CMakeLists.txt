@@ -29,6 +29,8 @@ add_library(citnames_a OBJECT
 
 target_include_directories(citnames_a PUBLIC include/)
 target_include_directories(citnames_a PUBLIC source/)
+target_compile_definitions(citnames_a PRIVATE SQLITE_THREADSAFE=0)
+target_compile_definitions(citnames_a PRIVATE SQLITE_OMIT_SHARED_CACHE)
 target_link_libraries(citnames_a PUBLIC main_a)
 target_link_libraries(citnames_a PUBLIC domain_a)
 target_link_libraries(citnames_a PUBLIC result_a)
