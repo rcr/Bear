@@ -27,9 +27,9 @@ namespace {
     struct SessionFixture : ic::Session {
     public:
         MOCK_METHOD(
-            rust::Result<ic::Execution>,
+            rust::Result<rpc::Execution>,
             resolve,
-            (const ic::Execution &input),
+            (const rpc::Execution &input),
             (const, override));
 
         MOCK_METHOD(

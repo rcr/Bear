@@ -34,12 +34,12 @@ namespace ic {
         static rust::Result<Session::Ptr> from(const flags::Arguments &args, const char **envp);
 
     public:
-        [[nodiscard]] rust::Result<ic::Execution> resolve(const ic::Execution &execution) const override;
+        [[nodiscard]] rust::Result<rpc::Execution> resolve(const rpc::Execution &execution) const override;
         [[nodiscard]] sys::Process::Builder supervise(const ic::Execution &execution) const override;
 
     private:
         [[nodiscard]] rust::Result<fs::path> resolve(const fs::path &name) const;
-        [[nodiscard]] std::map<std::string, std::string> update(const std::map<std::string, std::string>& env) const;
+        void update(google::protobuf::Map<std::string, std::string>& env) const;
         [[nodiscard]] std::map<std::string, std::string> set_up(const std::map<std::string, std::string>& env) const;
 
     private:

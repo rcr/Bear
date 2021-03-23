@@ -31,24 +31,7 @@
 #include <functional>
 
 namespace {
-
     constexpr char GLIBC_PRELOAD_KEY[] = "LD_PRELOAD";
-
-    using env_t = std::map<std::string, std::string>;
-    using mapper_t = std::function<std::string(const std::string&, const std::string&)>;
-
-    void insert_or_merge(
-        env_t& target,
-        const char* key,
-        const std::string& value,
-        const mapper_t& merger) noexcept
-    {
-        if (auto it = target.find(key); it != target.end()) {
-            it->second = merger(value, it->second);
-        } else {
-            target.emplace(key, value);
-        }
-    }
 }
 
 namespace ic {
@@ -78,15 +61,14 @@ namespace ic {
         spdlog::debug("Created library preload session. [library={0}, executor={1}]", library_, executor_);
     }
 
-    rust::Result<ic::Execution> LibraryPreloadSession::resolve(const ic::Execution &execution) const
+    rust::Result<rpc::Execution> LibraryPreloadSession::resolve(const rpc::Execution &execution) const
     {
-        spdlog::debug("trying to resolve for library: {}", execution.executable.string());
-        return rust::Ok(ic::Execution{
-                execution.executable,
-                execution.arguments,
-                execution.working_dir,
-                update(execution.environment)
-        });
+        spdlog::debug("trying to resolve for library: {}", execution.executable());
+
+        rpc::Execution candidate(execution);
+        update(*candidate.mutable_environment());
+
+        return rust::Ok(candidate);
     }
 
     sys::Process::Builder LibraryPreloadSession::supervise(const ic::Execution &execution) const
@@ -117,8 +99,17 @@ namespace ic {
         }
         copy[el::env::KEY_DESTINATION] = *session_locator_;
         copy[el::env::KEY_REPORTER] = executor_;
-        insert_or_merge(copy, GLIBC_PRELOAD_KEY, library_, Session::keep_front_in_path);
+        copy[GLIBC_PRELOAD_KEY] = Session::keep_front_in_path(library_, copy[GLIBC_PRELOAD_KEY]);
 
         return copy;
+    }
+
+    void LibraryPreloadSession::update(google::protobuf::Map<std::string, std::string> &env) const {
+        if (verbose_) {
+            env[el::env::KEY_VERBOSE] = "true";
+        }
+        env[el::env::KEY_DESTINATION] = *session_locator_;
+        env[el::env::KEY_REPORTER] = executor_;
+        env[GLIBC_PRELOAD_KEY] = Session::keep_front_in_path(library_, env[GLIBC_PRELOAD_KEY]);
     }
 }

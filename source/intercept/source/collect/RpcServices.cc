@@ -29,10 +29,10 @@ namespace ic {
     { }
 
     grpc::Status SupervisorImpl::Resolve(grpc::ServerContext *, const rpc::ResolveRequest *request, rpc::ResolveResponse *response) {
-        return session_.resolve(from(request->execution()))
-                .map<grpc::Status>([&response](auto execution) {
+        return session_.resolve(request->execution())
+                .map<grpc::Status>([&response](const auto &execution) {
                     // Need to copy the execution into the response.
-                    response->mutable_execution()->CopyFrom(into(execution));
+                    response->mutable_execution()->CopyFrom(execution);
                     // Confirm it with an OK.
                     return ::grpc::Status::OK;
                 })

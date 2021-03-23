@@ -44,7 +44,7 @@ namespace ic {
     public:
         virtual ~Session() = default;
 
-        [[nodiscard]] virtual rust::Result<ic::Execution> resolve(const ic::Execution &execution) const = 0;
+        [[nodiscard]] virtual rust::Result<rpc::Execution> resolve(const rpc::Execution &execution) const = 0;
         [[nodiscard]] virtual sys::Process::Builder supervise(const ic::Execution &execution) const = 0;
 
         [[nodiscard]] rust::Result<int> run(const ic::Execution &execution, const SessionLocator &session_locator);

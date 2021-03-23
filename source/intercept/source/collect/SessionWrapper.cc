@@ -176,19 +176,18 @@ namespace ic {
         spdlog::debug("session initialized with: override: {}", MapHolder { override_ });
     }
 
-    rust::Result<ic::Execution> WrapperSession::resolve(const ic::Execution &execution) const
+    rust::Result<rpc::Execution> WrapperSession::resolve(const rpc::Execution &execution) const
     {
-        spdlog::debug("trying to resolve for wrapper: {}", execution.executable.string());
-        return resolve(execution.executable)
-                .map<ic::Execution>([this, &execution](auto executable) {
-                    auto arguments = execution.arguments;
-                    arguments.front() = executable;
-                    return ic::Execution{
-                            fs::path(executable),
-                            std::move(arguments),
-                            fs::path(execution.working_dir),
-                            update(execution.environment)
-                    };
+        spdlog::debug("trying to resolve for wrapper: {}", execution.executable());
+        return resolve(execution.executable())
+                .map<rpc::Execution>([this, &execution](auto executable) {
+                    rpc::Execution candidate(execution);
+
+                    candidate.set_executable(executable.string());
+                    candidate.set_arguments(0, executable.string());
+                    update(*candidate.mutable_environment());
+
+                    return candidate;
                 });
     }
 
@@ -210,10 +209,8 @@ namespace ic {
         return rust::Err(std::runtime_error("not recognized wrapper"));
     }
 
-    std::map<std::string, std::string> WrapperSession::update(const std::map<std::string, std::string>& env) const
+    void WrapperSession::update(google::protobuf::Map<std::string, std::string>& copy) const
     {
-        std::map<std::string, std::string> copy(env);
-
         // remove wrapper directory from path
         if (auto it = copy.find("PATH"); it != copy.end()) {
             it->second = remove_from_path(wrapper_dir_, it->second);
@@ -232,7 +229,6 @@ namespace ic {
                 copy.erase(it);
             }
         }
-        return copy;
     }
 
     std::map<std::string, std::string> WrapperSession::set_up(const std::map<std::string, std::string>& env) const

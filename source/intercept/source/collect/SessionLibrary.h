@@ -30,11 +30,12 @@ namespace ic {
         static rust::Result<Session::Ptr> from(const flags::Arguments&);
 
     public:
-        [[nodiscard]] rust::Result<ic::Execution> resolve(const ic::Execution &execution) const override;
+        [[nodiscard]] rust::Result<rpc::Execution> resolve(const rpc::Execution &execution) const override;
         [[nodiscard]] sys::Process::Builder supervise(const ic::Execution &execution) const override;
 
     private:
         [[nodiscard]] std::map<std::string, std::string> update(const std::map<std::string, std::string>& env) const;
+        void update(google::protobuf::Map<std::string, std::string>& env) const;
 
     private:
         bool verbose_;
