@@ -123,13 +123,16 @@ namespace ic {
     rust::Result<int> EventsDatabase::insert_event(const rpc::Event &event) {
         return to_string(event)
             .and_then<int>([this, &event](auto value) -> rust::Result<int> {
+                if (auto rc = sqlite3_reset(insert_event_); rc != SQLITE_OK) {
+                    return rust::Err(create_error("Prepared statement reset failed", handle_));
+                }
                 if (auto rc = sqlite3_bind_int64(insert_event_, 1, event.rid()); rc != SQLITE_OK) {
                     return rust::Err(create_error("Prepared statement binding (1) failed", handle_));
                 }
-                if (auto rc = sqlite3_bind_text(insert_event_, 2, event.timestamp().c_str(), -1, nullptr); rc != SQLITE_OK) {
+                if (auto rc = sqlite3_bind_text(insert_event_, 2, event.timestamp().c_str(), -1, SQLITE_TRANSIENT); rc != SQLITE_OK) {
                     return rust::Err(create_error("Prepared statement binding (2) failed", handle_));
                 }
-                if (auto rc = sqlite3_bind_text(insert_event_, 3, value.c_str(), -1, nullptr); rc != SQLITE_OK) {
+                if (auto rc = sqlite3_bind_text(insert_event_, 3, value.c_str(), -1, SQLITE_TRANSIENT); rc != SQLITE_OK) {
                     return rust::Err(create_error("Prepared statement binding (3) failed", handle_));
                 }
                 if (auto rc = sqlite3_step(insert_event_); rc != SQLITE_DONE) {
@@ -137,9 +140,6 @@ namespace ic {
                 }
                 if (auto rc = sqlite3_clear_bindings(insert_event_); rc != SQLITE_OK) {
                     return rust::Err(create_error("Prepared statement clear bindings failed", handle_));
-                }
-                if (auto rc = sqlite3_reset(insert_event_); rc != SQLITE_OK) {
-                    return rust::Err(create_error("Prepared statement reset failed", handle_));
                 }
                 return rust::Ok(0);
             });

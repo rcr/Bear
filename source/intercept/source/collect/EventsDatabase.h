@@ -33,8 +33,6 @@ struct sqlite3_stmt;
 
 namespace ic {
 
-    class EventsIterator;
-
     class EventsDatabase {
     public:
         using Ptr = std::shared_ptr<EventsDatabase>;
